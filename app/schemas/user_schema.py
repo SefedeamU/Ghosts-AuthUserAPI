@@ -1,17 +1,8 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from pydantic import BaseModel, EmailStr
+from typing import List, Optional
 from datetime import datetime
 
-    # It will be used to login the user
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str = Field(..., min_length=6)
-
-    # It will be used to register a new user
-class UserRegister(BaseModel):
-    email: EmailStr
-    username: str
-    password: str = Field(..., min_length=6)
+from app.schemas.address_schema import AddressOut
 
     # It will be used to update the user information
 class UserUpdate(BaseModel):
@@ -37,6 +28,7 @@ class UserOut(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
+    addresses: List[AddressOut] = [] #Each user can have multiple addresses
 
     class Config:
-        orm_mode = True  # Allow convert SQLAlchemy models to Pydantic models
+        from_attributes = True  # Allow convert SQLAlchemy models to Pydantic models

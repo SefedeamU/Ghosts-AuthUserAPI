@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: ghosts-db
+    restart: always
+    environment:
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: contraseña
+      POSTGRES_DB: nombre_basedatos
+    ports:
+      - "5432:5432"
+    networks:
+      - ghosts-network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: ghosts-api
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    networks:
+      - ghosts-network
+
+networks:
+  ghosts-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

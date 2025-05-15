@@ -1,9 +1,8 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
-#Instantiate the declarative base class
-Base = declarative_base()
+from app.db.base import Base
 
 # Define the User class that maps to the users table in the database
 class User(Base):
@@ -23,3 +22,5 @@ class User(Base):
     birthdate = Column(String, nullable=True)
     gender = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)
+
+    addresses = relationship("Address", back_populates="user")
