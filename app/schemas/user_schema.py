@@ -5,7 +5,7 @@ from datetime import datetime
 from app.schemas.address_schema import AddressOut
 
     # It will be used to update the user information
-class UserUpdate(BaseModel):
+class UserUpdate(BaseModel, extra="forbid"):
     username: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None

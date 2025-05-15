@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from pydantic import EmailStr, ValidationError
 
 from app.api.deps import get_db
 from app.crud.user_crud import delete_user, get_user_by_email, get_user_by_id, get_users, update_user_by_id
@@ -8,54 +9,92 @@ from app.schemas.user_schema import UserOut
 
 router = APIRouter()
 
+def validate_user_id(user_id):
+    if not isinstance(user_id, int) or user_id <= 0:
+        raise HTTPException(status_code=422, detail="The 'user_id' parameter must be a positive integer.")
+
+def validate_email(email):
+    if not isinstance(email, str) or not email.strip():
+        raise HTTPException(status_code=422, detail="The 'email' parameter is required and must be a non-empty string.")
+    try:
+        EmailStr.validate(email)
+    except ValidationError:
+        raise HTTPException(status_code=422, detail="The 'email' parameter must be a valid email address.")
+
+def validate_update_data(user_data: dict, db: Session, user_id: int):
+    if "email" in user_data:
+        validate_email(user_data["email"])
+        existing_user = get_user_by_email(db, user_data["email"])
+        if existing_user and existing_user.id != user_id:
+            raise HTTPException(status_code=409, detail="The 'email' is already in use by another user.")
+    if "username" in user_data:
+        if not isinstance(user_data["username"], str) or not user_data["username"].strip():
+            raise HTTPException(status_code=422, detail="The 'username' field is required and must be a non-empty string.")
+        if len(user_data["username"]) > 50:
+            raise HTTPException(status_code=422, detail="The 'username' field must not exceed 50 characters.")
+    if "password" in user_data:
+        if not isinstance(user_data["password"], str) or not user_data["password"].strip():
+            raise HTTPException(status_code=422, detail="The 'password' field is required and must be a non-empty string.")
+        if len(user_data["password"]) < 6:
+            raise HTTPException(status_code=422, detail="The 'password' field must be at least 6 characters long.")
+        if len(user_data["password"]) > 128:
+            raise HTTPException(status_code=422, detail="The 'password' field must not exceed 128 characters.")
+
 @router.get("/", response_model=list[UserOut])
 def list_users(
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="Número de usuarios a omitir"),
-    limit: int = Query(10, ge=1, le=100, description="Cantidad máxima de usuarios a retornar")
+    skip: int = Query(0, ge=0, description="Number of users to skip"),
+    limit: int = Query(10, ge=1, le=100, description="Maximum number of users to return")
 ):
     try:
         result = get_users(db, skip=skip, limit=limit)
         return result
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Error de base de datos: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.get("/{user_id}", response_model=UserOut)
 def get_user(user_id: int, db: Session = Depends(get_db)):
+    validate_user_id(user_id)
     try:
         user = get_user_by_id(db, user_id)
         if not user:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            raise HTTPException(status_code=404, detail="User not found.")
         return user
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Error de base de datos: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.get("/email/{email}", response_model=UserOut)
 def get_user_by_email_route(email: str, db: Session = Depends(get_db)):
+    validate_email(email)
     try:
         user = get_user_by_email(db, email)
         if not user:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            raise HTTPException(status_code=404, detail="User not found.")
         return user
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Error de base de datos: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.put("/{user_id}", response_model=UserOut)
 def update_user(user_id: int, user_data: dict, db: Session = Depends(get_db)):
+    validate_user_id(user_id)
+    validate_update_data(user_data, db, user_id)
     try:
         user = update_user_by_id(db, user_id, user_data)
         if not user:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            raise HTTPException(status_code=404, detail="User not found.")
         return user
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Error de base de datos: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    except TypeError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid data sent: {str(e)}")
 
 @router.delete("/{user_id}", response_model=UserOut)
 def remove_user(user_id: int, db: Session = Depends(get_db)):
+    validate_user_id(user_id)
     try:
         user = delete_user(db, user_id)
         if not user:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            raise HTTPException(status_code=404, detail="User not found.")
         return user
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Error de base de datos: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

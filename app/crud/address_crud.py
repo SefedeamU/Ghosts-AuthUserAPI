@@ -48,3 +48,24 @@ def delete_address(db: Session, address_id):
     except Exception:
         db.rollback()
         raise
+
+def count_addresses_for_user(db: Session, user_id: int) -> int:
+    try:
+        return db.query(Address).filter(Address.user_id == user_id).count()
+    except Exception:
+        db.rollback()
+        raise
+
+def address_exists_for_user(db: Session, user_id: int, address_data) -> bool:
+    try:
+        return db.query(Address).filter(
+            Address.user_id == user_id,
+            Address.street == address_data.street,
+            Address.city == address_data.city,
+            Address.state == address_data.state,
+            Address.zip_code == address_data.zip_code,
+            Address.country == address_data.country
+        ).first() is not None
+    except Exception:
+        db.rollback()
+        raise
