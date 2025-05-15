@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_HOURS: int = 72
+    ALLOWED_COUNTRIES: str  # <--- Agrega este campo
+    MAX_ADDRESSES_PER_USER: int  # <--- Y este campo
 
     @property
     def DATABASE_URL(self):

@@ -17,5 +17,4 @@ class Address(Base):
     zip_code = Column(String, nullable=True)
     country = Column(String, nullable=True)
 
-    # Relación inversa: cada dirección pertenece a un usuario
     user = relationship("User", back_populates="addresses")

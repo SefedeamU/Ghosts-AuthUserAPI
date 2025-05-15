@@ -120,7 +120,7 @@ def get_address(address_id: int, db: Session = Depends(get_db)):
     response_description="A list of address objects."
 )
 def get_addresses_by_user(
-    user_id: int = Query(..., description="The user ID to retrieve addresses for.", example=1),
+    user_id: int,
     db: Session = Depends(get_db)
 ):
     """

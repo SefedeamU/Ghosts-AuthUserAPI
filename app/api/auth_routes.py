@@ -8,28 +8,17 @@ from app.schemas.auth_schema import UserRegister, UserLogin, AuthResponse
 from app.api.deps import get_db
 from app.crud.auth_crud import login, register
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["Authentication"]
-)
+router = APIRouter()
 
 def validate_login_fields(user_in: UserLogin):
     if not isinstance(user_in.email, str) or not user_in.email.strip():
         raise HTTPException(status_code=422, detail="The 'email' field is required and must be a non-empty string.")
-    try:
-        EmailStr.validate(user_in.email)
-    except ValidationError:
-        raise HTTPException(status_code=422, detail="The 'email' field must be a valid email address.")
     if not isinstance(user_in.password, str) or not user_in.password.strip():
         raise HTTPException(status_code=422, detail="The 'password' field is required and must be a non-empty string.")
 
 def validate_register_fields(user_in: UserRegister):
     if not isinstance(user_in.email, str) or not user_in.email.strip():
         raise HTTPException(status_code=422, detail="The 'email' field is required and must be a non-empty string.")
-    try:
-        EmailStr.validate(user_in.email)
-    except ValidationError:
-        raise HTTPException(status_code=422, detail="The 'email' field must be a valid email address.")
     if not isinstance(user_in.username, str) or not user_in.username.strip():
         raise HTTPException(status_code=422, detail="The 'username' field is required and must be a non-empty string.")
     if not isinstance(user_in.password, str) or not user_in.password.strip():
