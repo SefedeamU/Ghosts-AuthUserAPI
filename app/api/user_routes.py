@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from pydantic import EmailStr, ValidationError
@@ -40,20 +40,37 @@ def validate_update_data(user_data: dict, db: Session, user_id: int):
         if len(user_data["password"]) > 128:
             raise HTTPException(status_code=422, detail="The 'password' field must not exceed 128 characters.")
 
-@router.get("/", response_model=list[UserOut])
+@router.get(
+    "/",
+    response_model=list[UserOut],
+    summary="List users",
+    description="Get a paginated list of users.",
+    response_description="A list of user objects."
+)
 def list_users(
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="Number of users to skip"),
-    limit: int = Query(10, ge=1, le=100, description="Maximum number of users to return")
+    skip: int = Query(0, ge=0, description="Number of users to skip", example=0),
+    limit: int = Query(10, ge=1, le=100, description="Maximum number of users to return", example=10)
 ):
+    """
+    Retrieve a paginated list of users.
+    """
     try:
         result = get_users(db, skip=skip, limit=limit)
         return result
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-@router.get("/{user_id}", response_model=UserOut)
+@router.get(
+    "/{user_id}",
+    response_model=UserOut,
+    summary="Get user by ID",
+    description="Retrieve a user by their unique user ID."
+)
 def get_user(user_id: int, db: Session = Depends(get_db)):
+    """
+    Retrieve a user by their unique user ID.
+    """
     validate_user_id(user_id)
     try:
         user = get_user_by_id(db, user_id)
@@ -63,8 +80,16 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-@router.get("/email/{email}", response_model=UserOut)
+@router.get(
+    "/email/{email}",
+    response_model=UserOut,
+    summary="Get user by email",
+    description="Retrieve a user by their email address."
+)
 def get_user_by_email_route(email: str, db: Session = Depends(get_db)):
+    """
+    Retrieve a user by their email address.
+    """
     validate_email(email)
     try:
         user = get_user_by_email(db, email)
@@ -74,8 +99,21 @@ def get_user_by_email_route(email: str, db: Session = Depends(get_db)):
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-@router.put("/{user_id}", response_model=UserOut)
-def update_user(user_id: int, user_data: dict, db: Session = Depends(get_db)):
+@router.put(
+    "/{user_id}",
+    response_model=UserOut,
+    summary="Update user",
+    description="Update user information by user ID.",
+    response_description="The updated user object."
+)
+def update_user(
+    user_id: int,
+    user_data: dict = Body(..., example={"email": "new@mail.com", "username": "newuser"}),
+    db: Session = Depends(get_db)
+):
+    """
+    Update user information by user ID.
+    """
     validate_user_id(user_id)
     validate_update_data(user_data, db, user_id)
     try:
@@ -88,8 +126,16 @@ def update_user(user_id: int, user_data: dict, db: Session = Depends(get_db)):
     except TypeError as e:
         raise HTTPException(status_code=422, detail=f"Invalid data sent: {str(e)}")
 
-@router.delete("/{user_id}", response_model=UserOut)
+@router.delete(
+    "/{user_id}",
+    response_model=UserOut,
+    summary="Delete user",
+    description="Delete a user by their unique user ID."
+)
 def remove_user(user_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a user by their unique user ID.
+    """
     validate_user_id(user_id)
     try:
         user = delete_user(db, user_id)

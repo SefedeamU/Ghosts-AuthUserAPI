@@ -1,18 +1,16 @@
 from pydantic import BaseModel, EmailStr, Field
 from app.schemas.user_schema import UserOut
 
-    # It will be used to login the user
 class UserLogin(BaseModel, extra="forbid"):
-    email: EmailStr
-    password: str = Field(..., min_length=6)
+    email: EmailStr = Field(..., example="user@example.com", description="User's email address.")
+    password: str = Field(..., min_length=6, example="yourpassword", description="User's password (6-128 characters).")
 
-    # It will be used to register a new user
 class UserRegister(BaseModel, extra="forbid"):
-    email: EmailStr
-    username: str
-    password: str = Field(..., min_length=6)
+    email: EmailStr = Field(..., example="newuser@example.com", description="User's email address.")
+    username: str = Field(..., example="newuser", description="User's display name.")
+    password: str = Field(..., min_length=6, example="securepassword", description="User's password (6-128 characters).")
 
 class AuthResponse(BaseModel):
-    id: int
-    user_rol: str
-    access_token: str
+    id: int = Field(..., example=1, description="User ID.")
+    user_rol: str = Field(..., example="customer", description="User's role.")
+    access_token: str = Field(..., example="jwt.token.here", description="JWT access token.")

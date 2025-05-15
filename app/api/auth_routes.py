@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Body
 from pydantic import EmailStr, ValidationError
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,7 +8,10 @@ from app.schemas.auth_schema import UserRegister, UserLogin, AuthResponse
 from app.api.deps import get_db
 from app.crud.auth_crud import login, register
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/auth",
+    tags=["Authentication"]
+)
 
 def validate_login_fields(user_in: UserLogin):
     if not isinstance(user_in.email, str) or not user_in.email.strip():
@@ -38,8 +41,26 @@ def validate_register_fields(user_in: UserRegister):
     if len(user_in.password) > 128:
         raise HTTPException(status_code=422, detail="The 'password' field must not exceed 128 characters.")
 
-@router.post("/login", response_model=AuthResponse)
-def login_user(user_in: UserLogin, db: Session = Depends(get_db)):
+@router.post(
+    "/login",
+    response_model=AuthResponse,
+    summary="User login",
+    description="Authenticate a user with email and password. Returns an access token if credentials are valid.",
+    response_description="Authentication response with user info and access token."
+)
+def login_user(
+    user_in: UserLogin = Body(
+        ...,
+        example={
+            "email": "user@example.com",
+            "password": "yourpassword"
+        }
+    ),
+    db: Session = Depends(get_db)
+):
+    """
+    Authenticate a user and return an access token.
+    """
     try:
         validate_login_fields(user_in)
         result = login(db, user_in)
@@ -58,8 +79,27 @@ def login_user(user_in: UserLogin, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
-@router.post("/register", response_model=AuthResponse)
-def register_user(user_in: UserRegister, db: Session = Depends(get_db)):
+@router.post(
+    "/register",
+    response_model=AuthResponse,
+    summary="User registration",
+    description="Register a new user with email, username, and password.",
+    response_description="Authentication response with user info and access token."
+)
+def register_user(
+    user_in: UserRegister = Body(
+        ...,
+        example={
+            "email": "newuser@example.com",
+            "username": "newuser",
+            "password": "securepassword"
+        }
+    ),
+    db: Session = Depends(get_db)
+):
+    """
+    Register a new user and return an access token.
+    """
     try:
         validate_register_fields(user_in)
         db_user = User(
@@ -83,8 +123,18 @@ def register_user(user_in: UserRegister, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
-@router.post("/verify-token")
-def verify_token(Authorization: str = Header(...)):
+@router.post(
+    "/verify-token",
+    summary="Verify access token",
+    description="Verify the validity of a JWT access token.",
+    response_description="Decoded token data if valid."
+)
+def verify_token(
+    Authorization: str = Header(..., description="JWT access token in the format: Bearer <token>")
+):
+    """
+    Verify the validity of a JWT access token.
+    """
     try:
         token = Authorization.split(" ")[1] if " " in Authorization else Authorization
         result = decode_access_token(token)
