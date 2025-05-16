@@ -3,10 +3,11 @@ from pydantic import EmailStr, ValidationError
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.security import decode_access_token, hash_password
+from app.crud.user_crud import get_user_by_email, update_user_by_id
 from app.models.user_model import User
-from app.schemas.auth_schema import UserRegister, UserLogin, AuthResponse
+from app.schemas.auth_schema import TokenRequest, TokenVerify, UserRegister, UserLogin, AuthResponse
 from app.api.deps import get_db
-from app.crud.auth_crud import login, register
+from app.crud.auth_crud import create_action_token, get_valid_action_token, login, mark_action_token_used, register
 
 router = APIRouter()
 
@@ -100,10 +101,14 @@ def register_user(
         result = register(db, db_user)
         if not result or not result.get("user"):
             raise HTTPException(status_code=400, detail="User could not be registered.")
+
+        token_obj = create_action_token(db, result["user"].id, "verification", expires_minutes=30)
+################### Aquí deberías enviar el email con token_obj.token####################################
         return {
             "id": result["user"].id,
             "user_rol": result["user"].user_rol,
-            "access_token": result["access_token"]
+            "access_token": result["access_token"],
+            "msg": "User registered successfully. Please verify your email."
         }
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -130,3 +135,70 @@ def verify_token(
         return result
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+    
+@router.post(
+    "/request-password-reset",
+    summary="Request password reset",
+    description="Send a password reset email to the user.",
+)
+def request_password_reset(
+    data: TokenRequest,
+    db: Session = Depends(get_db)
+):
+    user = get_user_by_email(db, data.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    token_obj = create_action_token(db, user.id, "reset", expires_minutes=30)
+######################Aquí deberías enviar el email con el token_obj.token#############################
+    return {"msg": "Reset password email sent."}
+
+@router.post(
+    "/reset-password",
+    summary="Reset password",
+    description="Allow the user to reset their password using a token.",
+)
+def reset_password(
+    data: TokenVerify,
+    db: Session = Depends(get_db)
+):
+    user_token = get_valid_action_token(db, data.token, "reset")
+    if not user_token:
+        raise HTTPException(status_code=400, detail="Invalid or expired token.")
+    if not data.new_password or len(data.new_password) < 6:
+        raise HTTPException(status_code=422, detail="The 'new_password' field must be at least 6 characters long.")
+    mark_action_token_used(db, data.token)
+    hashed = hash_password(data.new_password)
+    update_user_by_id(db, user_token.user_id, {"hashed_password": hashed})
+    return {"msg": "Password reset successfully."}
+
+@router.post(
+    "/request-email-verification",
+    summary="Request email verification",
+    description="Send an email verification request to the user.",
+)
+def request_email_verification(
+    data: TokenRequest,
+    db: Session = Depends(get_db)
+):
+    user = get_user_by_email(db, data.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    token_obj = create_action_token(db, user.id, "verification", expires_minutes=30)
+#################Aquí deberías enviar el email con token_obj.token############
+    return {"msg": "Email de verificación enviado."}
+
+@router.post(
+    "/confirm-email",
+    summary="Confirmar email",
+    description="Confirma el email del usuario usando el token recibido.",
+)
+def confirm_email(
+    data: TokenVerify,
+    db: Session = Depends(get_db)
+):
+    user_token = get_valid_action_token(db, data.token, "verification")
+    if not user_token:
+        raise HTTPException(status_code=400, detail="Token inválido, expirado o ya usado.")
+    mark_action_token_used(db, data.token)
+    update_user_by_id(db, user_token.user_id, {"is_verified": True})
+    return {"msg": "Email confirmado exitosamente."}

@@ -16,13 +16,15 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 # Function to create a JWT access token.
 # It takes a dictionary of data and an optional expiration time in hours.
-def create_access_token(data: dict, user_rol: str):
+def create_access_token(data: dict, user_rol: str = None, expires_delta: timedelta = None):
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(hours=settings.ACCESS_TOKEN_EXPIRE_HOURS)
-    to_encode.update({
-        "exp": expire,
-        "rol": user_rol
-    })
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(hours=settings.ACCESS_TOKEN_EXPIRE_HOURS)
+    to_encode.update({"exp": expire})
+    if user_rol:
+        to_encode["rol"] = user_rol
     encoded_jwt = jwt.encode(
         to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
     )

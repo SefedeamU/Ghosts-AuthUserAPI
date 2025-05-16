@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr, Field
-from app.schemas.user_schema import UserOut
 
 class UserLogin(BaseModel, extra="forbid"):
     email: EmailStr = Field(..., example="user@example.com", description="User's email address.")
@@ -14,3 +13,10 @@ class AuthResponse(BaseModel):
     id: int = Field(..., example=1, description="User ID.")
     user_rol: str = Field(..., example="customer", description="User's role.")
     access_token: str = Field(..., example="jwt.token.here", description="JWT access token.")
+
+class TokenRequest(BaseModel):
+    email: str
+
+class TokenVerify(BaseModel):
+    token: str
+    new_password: str = None 
