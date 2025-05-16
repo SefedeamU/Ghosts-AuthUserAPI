@@ -1,7 +1,7 @@
 services:
   auth-api:
     build: .
-    container_name: ghosts-api
+    container_name: ghosts-auth-api
     restart: always
     env_file:
       - .env
@@ -16,7 +16,7 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: ghosts-db
+    container_name: ghosts-auth-db
     restart: always
     environment:
       POSTGRES_USER: usuario
