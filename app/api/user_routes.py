@@ -49,8 +49,8 @@ def validate_update_data(user_data: dict, db: Session, user_id: int):
 )
 def list_users(
     db: Session = Depends(get_db),
-    skip: int = Query(0, ge=0, description="Number of users to skip", example=0),
-    limit: int = Query(10, ge=1, le=100, description="Maximum number of users to return", example=10)
+    skip: int = Query(0, ge=0, description="Number of users to skip", examples=0),
+    limit: int = Query(10, ge=1, le=100, description="Maximum number of users to return", examples=10)
 ):
     """
     Retrieve a paginated list of users.
@@ -108,7 +108,7 @@ def get_user_by_email_route(email: str, db: Session = Depends(get_db)):
 )
 def update_user(
     user_id: int,
-    user_data: dict = Body(..., example={"email": "new@mail.com", "username": "newuser"}),
+    user_data: dict = Body(..., examples={"email": "new@mail.com", "username": "newuser"}),
     db: Session = Depends(get_db)
 ):
     """

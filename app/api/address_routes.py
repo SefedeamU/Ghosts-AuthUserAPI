@@ -57,7 +57,7 @@ def validate_address_fields(address: AddressCreate):
 def post_address(
     address: AddressCreate = Body(
         ...,
-        example={
+        examples={
             "user_id": 1,
             "street": "123 Main St",
             "city": "New York",
@@ -145,7 +145,7 @@ def update_address(
     address_id: int,
     address: AddressCreate = Body(
         ...,
-        example={
+        examples={
             "user_id": 1,
             "street": "456 Elm St",
             "city": "Boston",

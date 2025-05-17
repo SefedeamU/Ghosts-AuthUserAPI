@@ -41,7 +41,7 @@ def validate_register_fields(user_in: UserRegister):
 def login_user(
     user_in: UserLogin = Body(
         ...,
-        example={
+        examples={
             "email": "user@example.com",
             "password": "yourpassword"
         }
@@ -79,7 +79,7 @@ def login_user(
 def register_user(
     user_in: UserRegister = Body(
         ...,
-        example={
+        examples={
             "email": "newuser@example.com",
             "username": "newuser",
             "password": "securepassword"
