@@ -9,3 +9,5 @@ python-jose
 psycopg2-binary
 pydantic-settings
 email-validator
+pytest
+setuptools

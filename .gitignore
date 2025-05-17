@@ -1,3 +1,5 @@
 .venv
 .env
 __pycache__/
+auth_microservice.egg-info/
+.pytest_cache/

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Body
-from pydantic import EmailStr, ValidationError
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+
 from app.core.security import decode_access_token, hash_password
 from app.crud.user_crud import get_user_by_email, update_user_by_id
 from app.models.user_model import User
