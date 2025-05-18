@@ -1,13 +1,16 @@
+from datetime import datetime, timezone
 import re
-from fastapi import APIRouter, Depends, Header, HTTPException, Body, Security
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import token
+from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.security import decode_access_token, hash_password, verify_password
 from app.crud.user_crud import get_user_by_email, get_user_by_id, update_user_by_id
+from app.models.auth_model import PasswordRestoreToken
 from app.models.user_model import User
-from app.schemas.auth_schema import TokenRequest, TokenReset, TokenVerify, UserRegister, UserLogin, AuthResponse
+from app.schemas.auth_schema import TokenRequest, TokenReset, TokenVerify, UndoPasswordChangeRequest, UserRegister, UserLogin, AuthResponse
 from app.api.deps import get_db
 from app.crud.auth_crud import create_action_token, get_valid_action_token, login, mark_action_token_used, register
 from app.utils.email_utils import load_template, send_email
@@ -32,10 +35,18 @@ def validate_password(password: str):
 def validate_register_fields(user_in: UserRegister):
     if not isinstance(user_in.email, str) or not user_in.email.strip():
         raise HTTPException(status_code=400, detail="The 'email' field is required and must be a non-empty string.")
-    if not isinstance(user_in.username, str) or not user_in.username.strip():
-        raise HTTPException(status_code=400, detail="The 'username' field is required and must be a non-empty string.")
-    if len(user_in.username) > 50:
-        raise HTTPException(status_code=400, detail="The 'username' field must not exceed 50 characters.")
+    if not isinstance(user_in.firstname, str) or not user_in.firstname.strip():
+        raise HTTPException(status_code=400, detail="The 'firstname' field is required and must be a non-empty string.")
+    if len(user_in.firstname) > 50:
+        raise HTTPException(status_code=400, detail="The 'firstname' field must not exceed 50 characters.")
+    if not isinstance(user_in.lastname, str) or not user_in.lastname.strip():
+        raise HTTPException(status_code=400, detail="The 'lastname' field is required and must be a non-empty string.")
+    if len(user_in.lastname) > 50:
+        raise HTTPException(status_code=400, detail="The 'lastname' field must not exceed 50 characters.")
+    if not isinstance(user_in.phone, str) or not user_in.phone.strip():
+        raise HTTPException(status_code=400, detail="The 'phone' field is required and must be a non-empty string.")
+    if not re.match(r"^\+\d{7,15}$", user_in.phone):
+        raise HTTPException(status_code=400, detail="The 'phone' field must be a valid international phone number (e.g., +1234567890).")
     validate_password(user_in.password)
 
 def validate_login_fields(user_in: UserLogin):
@@ -93,7 +104,9 @@ def register_user(
         ...,
         examples={
             "email": "newuser@example.com",
-            "username": "newuser",
+            "firstname": "John",
+            "lastname": "Doe",
+            "phone": "+1234567890",
             "password": "securepassword"
         }
     ),
@@ -110,7 +123,9 @@ def register_user(
 
         db_user = User(
             email=user_in.email,
-            username=user_in.username,
+            firstname=user_in.firstname,
+            lastname=user_in.lastname,
+            phone=user_in.phone,
             hashed_password=hash_password(user_in.password),
             user_rol="customer"
         )
@@ -124,7 +139,7 @@ def register_user(
         email_body = load_template(
             "welcome.html",
             {
-                "username": result["user"].username,
+                "username": f"{result["user"].firstname} {result["user"].lastname}",
                 "confirmation_link": confirmation_link
             }
         )
@@ -165,12 +180,12 @@ def request_email_verification(
 
     confirmation_link = f"https://tu-frontend.com/confirm-email?token={token_obj.token}"
     email_body = load_template(
-        "welcome.html",
-        {
-            "username": user.username,
-            "confirmation_link": confirmation_link
-        }
-    )
+            "welcome.html",
+            {
+                "username": f"{user.firstname} {user.lastname}",
+                "confirmation_link": confirmation_link
+            }
+        )
     send_email(
         to_email=user.email,
         subject="Confirm your email for Ghosts-API",
@@ -196,7 +211,7 @@ def request_password_reset(
     email_body = load_template(
         "reset_password.html",
         {
-            "username": user.username,
+            "username": f"{user.firstname} {user.lastname}",
             "reset_link": reset_link
         }
     )
@@ -239,10 +254,50 @@ def reset_password(
     user = get_user_by_id(db, user_token.user_id)
     if user and verify_password(data.new_password, user.hashed_password):
         raise HTTPException(status_code=422, detail="The new password must be different from the previous one.")
+
+    restore_token = create_action_token(
+        db,
+        user_token.user_id,
+        "restore",
+        expires_minutes=30,
+        extra_payload={"old_hashed_password": user.hashed_password},
+        use_restore_table=True,
+        old_hashed_password=user.hashed_password
+    )
+
     mark_action_token_used(db, data.token)
     hashed = hash_password(data.new_password)
     update_user_by_id(db, user_token.user_id, {"hashed_password": hashed})
+
+    undo_link = f"https://tu-frontend.com/undo-password-change?token={restore_token.token}"
+    email_body = load_template(
+        "password_changed.html",
+        {
+            "username": f"{user.firstname} {user.lastname}",
+            "support_email": "soporte@your-domain.com",
+            "undo_link": undo_link
+        }
+    )
+    send_email(
+        to_email=user.email,
+        subject="Your password has been changed for Ghosts-API",
+        body=email_body
+    )
+
     return {"msg": "Password reset successfully."}
+
+@router.post("/undo-password-change")
+def undo_password_change(
+    data: UndoPasswordChangeRequest,
+    db: Session = Depends(get_db)
+):
+    restore_token = db.query(PasswordRestoreToken).filter_by(token=data.token, used=False).first()
+    if not restore_token or restore_token.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Invalid or expired token.")
+    update_user_by_id(db, restore_token.user_id, {"hashed_password": restore_token.old_hashed_password})
+    restore_token.used = True
+    db.commit()
+    return {"msg": "Your password has been restored. If no fuiste tú, cambia tu contraseña inmediatamente."}
 
 @router.post(
     "/verify-token",

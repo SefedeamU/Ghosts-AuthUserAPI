@@ -6,8 +6,10 @@ class UserLogin(BaseModel, extra="forbid"):
 
 class UserRegister(BaseModel, extra="forbid"):
     email: EmailStr = Field(..., examples=["newuser@example.com"], description="User's email address.")
-    username: str = Field(..., examples=["newuser"], description="User's display name.")
+    firstname: str = Field(..., examples=["john"], description="User's first name.")
+    lastname: str = Field(..., examples=["doe"], description="User's last name.")
     password: str = Field(..., min_length=6, examples=["securepassword"], description="User's password (6-128 characters).")
+    phone: str = Field(..., examples=["+1234567890"], description="User's phone number.")
 
 class AuthResponse(BaseModel):
     id: int = Field(..., examples=[1], description="User ID.")
@@ -22,4 +24,7 @@ class TokenReset(BaseModel):
     new_password: str = None 
 
 class TokenVerify(BaseModel):
+    token: str
+
+class UndoPasswordChangeRequest(BaseModel):
     token: str

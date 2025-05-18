@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta, timezone
+import secrets
 from jose import ExpiredSignatureError, JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.auth_model import UserToken
+from app.models.auth_model import PasswordRestoreToken, ActionToken
 from app.models.user_model import User
 from app.schemas.auth_schema import UserLogin
 from app.core.security import create_access_token, verify_password
@@ -30,32 +31,12 @@ def register(db: Session, db_user):
         db.rollback()
         raise
 
-def create_action_token(db: Session, user_id: int, type_: str, expires_minutes: int = 30):
-    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
-    payload = {
-        "sub": str(user_id),
-        "type": type_,
-        "exp": expire
-    }
-    token = create_access_token(payload, user_rol=None, expires_delta=timedelta(minutes=expires_minutes))
-    user_token = UserToken(
-        user_id=user_id,
-        token=token,
-        type=type_,
-        expires_at=expire,
-        used=False
-    )
-    db.add(user_token)
-    db.commit()
-    db.refresh(user_token)
-    return user_token
-
 def get_valid_action_token(db: Session, token: str, type_: str):
-    user_token = db.query(UserToken).filter(
-        UserToken.token == token,
-        UserToken.type == type_,
-        UserToken.used == False,
-        UserToken.expires_at > datetime.now(timezone.utc)
+    user_token = db.query(ActionToken).filter(
+        ActionToken.token == token,
+        ActionToken.type == type_,
+        ActionToken.used == False,
+        ActionToken.expires_at > datetime.now(timezone.utc)
     ).first()
     if not user_token:
         return None
@@ -68,7 +49,51 @@ def get_valid_action_token(db: Session, token: str, type_: str):
         return None
 
 def mark_action_token_used(db: Session, token: str):
-    user_token = db.query(UserToken).filter(UserToken.token == token).first()
+    user_token = db.query(ActionToken).filter(ActionToken.token == token).first()
     if user_token:
         user_token.used = True
         db.commit()
+
+def create_action_token(
+    db: Session,
+    user_id: int,
+    type_: str,
+    expires_minutes: int = 30,
+    extra_payload: dict = None,
+    use_restore_table: bool = False,
+    old_hashed_password: str = None
+):
+    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
+    payload = {
+        "sub": str(user_id),
+        "type": type_,
+        "exp": expire
+    }
+    if extra_payload:
+        payload.update(extra_payload)
+    token = create_access_token(payload, user_rol=None, expires_delta=timedelta(minutes=expires_minutes))
+
+    if use_restore_table:
+        restore_token = PasswordRestoreToken(
+            user_id=user_id,
+            old_hashed_password=old_hashed_password,
+            token=token,
+            expires_at=expire,
+            used=False
+        )
+        db.add(restore_token)
+        db.commit()
+        db.refresh(restore_token)
+        return restore_token
+    else:
+        user_token = ActionToken(
+            user_id=user_id,
+            token=token,
+            type=type_,
+            expires_at=expire,
+            used=False
+        )
+        db.add(user_token)
+        db.commit()
+        db.refresh(user_token)
+        return user_token

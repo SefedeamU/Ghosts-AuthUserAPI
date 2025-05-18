@@ -4,7 +4,8 @@ from datetime import datetime
 from app.schemas.address_schema import AddressOut
 
 class UserUpdate(BaseModel, extra="forbid"):
-    username: Optional[str] = Field(None, examples=["john_doe"], description="User's display name.")
+    firstname: Optional[str] = Field(None, examples=["john"], description="User's first name.")
+    lastname: Optional[str] = Field(None, examples=["doe"], description="User's last name.")
     phone: Optional[str] = Field(None, examples=["+1234567890"], description="User's phone number.")
     address: Optional[str] = Field(None, examples=["123 Main St"], description="User's main address.")
     birthdate: Optional[str] = Field(None, examples=["1990-01-01"], description="User's birthdate (YYYY-MM-DD).")
@@ -12,7 +13,8 @@ class UserUpdate(BaseModel, extra="forbid"):
     avatar_url: Optional[str] = Field(None, examples=["https://example.com/avatar.jpg"], description="URL to user's avatar image.")
 
 class UserReplace(BaseModel, extra="forbid"):
-    username: str = Field(..., examples=["john_doe"], description="User's display name.")
+    firstname: str = Field(..., examples=["john_doe"], description="User's display name.")
+    lastname: str = Field(..., examples=["john_doe"], description="User's display name.")
     phone: Optional[str] = Field(None, examples=["+1234567890"], description="User's phone number.")
     address: Optional[str] = Field(None, examples=["123 Main St"], description="User's main address.")
     birthdate: Optional[str] = Field(None, examples=["1990-01-01"], description="User's birthdate (YYYY-MM-DD).")
@@ -22,7 +24,8 @@ class UserReplace(BaseModel, extra="forbid"):
 class UserOut(BaseModel):
     id: int = Field(..., examples=[1], description="Unique user ID.")
     email: EmailStr = Field(..., examples=["user@example.com"], description="User's email address.")
-    username: str = Field(..., examples=["john_doe"], description="User's display name.")
+    firstname: str = Field(..., examples=["john_doe"], description="User's display name.")
+    lastname: str = Field(..., examples=["john_doe"], description="User's display name.")
     phone: Optional[str] = Field(None, examples=["+1234567890"], description="User's phone number.")
     address: Optional[str] = Field(None, examples=["123 Main St"], description="User's main address.")
     birthdate: Optional[str] = Field(None, examples=["1990-01-01"], description="User's birthdate (YYYY-MM-DD).")

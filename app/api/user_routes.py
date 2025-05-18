@@ -1,8 +1,10 @@
+import re
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from pydantic import EmailStr, ValidationError
 
+from app.api.auth_routes import validate_password
 from app.api.deps import get_db
 from app.crud.user_crud import delete_user, get_user_by_email, get_user_by_id, get_users, update_user_by_id
 from app.schemas.user_schema import UserOut, UserReplace, UserUpdate
@@ -22,23 +24,31 @@ def validate_email(email):
         raise HTTPException(status_code=422, detail="The 'email' parameter must be a valid email address.")
 
 def validate_update_data(user_data: dict, db: Session, user_id: int):
+    if "password" in user_data:
+        raise HTTPException(
+            status_code=403,
+            detail="Password cannot be updated from this endpoint. Use the password reset flow."
+        )
     if "email" in user_data:
         validate_email(user_data["email"])
         existing_user = get_user_by_email(db, user_data["email"])
         if existing_user and existing_user.id != user_id:
             raise HTTPException(status_code=409, detail="The 'email' is already in use by another user.")
-    if "username" in user_data:
-        if not isinstance(user_data["username"], str) or not user_data["username"].strip():
-            raise HTTPException(status_code=422, detail="The 'username' field is required and must be a non-empty string.")
-        if len(user_data["username"]) > 50:
-            raise HTTPException(status_code=422, detail="The 'username' field must not exceed 50 characters.")
-    if "password" in user_data:
-        if not isinstance(user_data["password"], str) or not user_data["password"].strip():
-            raise HTTPException(status_code=422, detail="The 'password' field is required and must be a non-empty string.")
-        if len(user_data["password"]) < 6:
-            raise HTTPException(status_code=422, detail="The 'password' field must be at least 6 characters long.")
-        if len(user_data["password"]) > 128:
-            raise HTTPException(status_code=422, detail="The 'password' field must not exceed 128 characters.")
+    if "firstname" in user_data:
+        if not isinstance(user_data["firstname"], str) or not user_data["firstname"].strip():
+            raise HTTPException(status_code=422, detail="The 'firstname' field is required and must be a non-empty string.")
+        if len(user_data["firstname"]) > 50:
+            raise HTTPException(status_code=422, detail="The 'firstname' field must not exceed 50 characters.")
+    if "lastname" in user_data:
+        if not isinstance(user_data["lastname"], str) or not user_data["lastname"].strip():
+            raise HTTPException(status_code=422, detail="The 'lastname' field is required and must be a non-empty string.")
+        if len(user_data["lastname"]) > 50:
+            raise HTTPException(status_code=422, detail="The 'lastname' field must not exceed 50 characters.")
+    if "phone" in user_data:
+        if not isinstance(user_data["phone"], str) or not user_data["phone"].strip():
+            raise HTTPException(status_code=422, detail="The 'phone' field is required and must be a non-empty string.")
+        if not re.match(r"^\+\d{7,15}$", user_data["phone"]):
+            raise HTTPException(status_code=422, detail="The 'phone' field must be a valid international phone number (e.g., +1234567890).")
 
 @router.get(
     "/",

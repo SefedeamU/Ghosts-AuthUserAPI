@@ -12,7 +12,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    username = Column(String, nullable=False)
+    firstname = Column(String, nullable=False)
+    lastname = Column(String, nullable=False)
     phone = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
@@ -24,5 +25,6 @@ class User(Base):
     gender = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)
     stripe_customer_id = Column(String, nullable=True, unique=True)
+    google_id = Column(String, unique=True, nullable=True)
 
     addresses = relationship("Address", back_populates="user")
