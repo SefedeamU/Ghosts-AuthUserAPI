@@ -1,0 +1,406 @@
+{
+    "info": {
+        "name": "Ghosts Auth Microservice",
+        "description": "Colección de endpoints principales del Auth Microservice para pruebas y documentación.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+        "name": "Auth",
+        "item": [
+            {
+            "name": "Login",
+            "request": {
+                "method": "POST",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"yourpassword\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/auth/login",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["auth", "login"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Register",
+            "request": {
+                "method": "POST",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"firstname\": \"john\",\n  \"lastname\": \"doe\",\n  \"password\": \"securepassword\",\n  \"phone\": \"+1234567890\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/auth/register",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["auth", "register"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Request Email Verification",
+            "request": {
+                "method": "POST",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"user@example.com\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/auth/request-email-verification",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["auth", "request-email-verification"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Request Password Reset",
+            "request": {
+                "method": "POST",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"user@example.com\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/auth/request-password-reset",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["auth", "request-password-reset"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Confirm Email",
+            "request": {
+                "method": "POST",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"token\": \"string\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/auth/confirm-email",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["auth", "confirm-email"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Reset Password",
+            "request": {
+                "method": "POST",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"token\": \"string\",\n  \"new_password\": \"string\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/auth/reset-password",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["auth", "reset-password"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Undo Password Change",
+            "request": {
+                "method": "POST",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"token\": \"string\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/auth/undo-password-change",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["auth", "undo-password-change"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Verify Token",
+            "request": {
+                "method": "POST",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"token\": \"string\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/auth/verify-token",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["auth", "verify-token"]
+                }
+            },
+            "response": []
+            }
+        ]
+        },
+        {
+        "name": "Users",
+        "item": [
+            {
+            "name": "Get Users",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                "raw": "http://localhost:8000/users?skip=0&limit=10",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["users"],
+                "query": [
+                    { "key": "skip", "value": "0" },
+                    { "key": "limit", "value": "10" }
+                ]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Get User by ID",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                "raw": "http://localhost:8000/users/1",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["users", "1"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Get User by Email",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                "raw": "http://localhost:8000/users/email/user@example.com",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["users", "email", "user@example.com"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Update User (PATCH)",
+            "request": {
+                "method": "PATCH",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"firstname\": \"john\",\n  \"lastname\": \"doe\",\n  \"phone\": \"+1234567890\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/users/1",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["users", "1"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Replace User (PUT)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"firstname\": \"john_doe\",\n  \"lastname\": \"john_doe\",\n  \"phone\": \"+1234567890\",\n  \"address\": \"123 Main St\",\n  \"birthdate\": \"1990-01-01\",\n  \"gender\": \"male\",\n  \"avatar_url\": \"https://example.com/avatar.jpg\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/users/1",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["users", "1"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Delete User",
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                "raw": "http://localhost:8000/users/1",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["users", "1"]
+                }
+            },
+            "response": []
+            }
+        ]
+        },
+        {
+        "name": "Addresses",
+        "item": [
+            {
+            "name": "Create Address",
+            "request": {
+                "method": "POST",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"street\": \"123 Main St\",\n  \"city\": \"New York\",\n  \"state\": \"NY\",\n  \"zip_code\": \"10001\",\n  \"country\": \"USA\",\n  \"user_id\": 1\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/addresses",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["addresses"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Get Address by ID",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                "raw": "http://localhost:8000/addresses/10",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["addresses", "10"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Update Address (PUT)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"street\": \"123 Main St\",\n  \"city\": \"New York\",\n  \"state\": \"NY\",\n  \"zip_code\": \"10001\",\n  \"country\": \"USA\",\n  \"user_id\": 1\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/addresses/10",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["addresses", "10"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Update Address (PATCH)",
+            "request": {
+                "method": "PATCH",
+                "header": [
+                { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                "mode": "raw",
+                "raw": "{\n  \"street\": \"123 Main St\"\n}"
+                },
+                "url": {
+                "raw": "http://localhost:8000/addresses/10",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["addresses", "10"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "Delete Address",
+            "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                "raw": "http://localhost:8000/addresses/10",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["addresses", "10"]
+                }
+            },
+            "response": []
+            },
+            {
+            "name": "List Addresses by User",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                "raw": "http://localhost:8000/addresses/user/1",
+                "protocol": "http",
+                "host": ["localhost"],
+                "port": "8000",
+                "path": ["addresses", "user", "1"]
+                }
+            },
+            "response": []
+            }
+        ]
+        }
+    ]
+}
