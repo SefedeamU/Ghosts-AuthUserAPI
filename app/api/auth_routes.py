@@ -1,36 +1,48 @@
-from fastapi import APIRouter, Depends, Header, HTTPException, Body
+import re
+from fastapi import APIRouter, Depends, Header, HTTPException, Body, Security
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.core.security import decode_access_token, hash_password
-from app.crud.user_crud import get_user_by_email, update_user_by_id
+from app.core.security import decode_access_token, hash_password, verify_password
+from app.crud.user_crud import get_user_by_email, get_user_by_id, update_user_by_id
 from app.models.user_model import User
-from app.schemas.auth_schema import TokenRequest, TokenVerify, UserRegister, UserLogin, AuthResponse
+from app.schemas.auth_schema import TokenRequest, TokenReset, TokenVerify, UserRegister, UserLogin, AuthResponse
 from app.api.deps import get_db
 from app.crud.auth_crud import create_action_token, get_valid_action_token, login, mark_action_token_used, register
+from app.utils.email_utils import load_template, send_email
 
 router = APIRouter()
+bearer_scheme = HTTPBearer()
 
-def validate_login_fields(user_in: UserLogin):
-    if not isinstance(user_in.email, str) or not user_in.email.strip():
-        raise HTTPException(status_code=422, detail="The 'email' field is required and must be a non-empty string.")
-    if not isinstance(user_in.password, str) or not user_in.password.strip():
-        raise HTTPException(status_code=422, detail="The 'password' field is required and must be a non-empty string.")
+def validate_password(password: str):
+    if not isinstance(password, str) or not password.strip():
+        raise HTTPException(status_code=400, detail="The 'password' field is required and must be a non-empty string.")
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="The 'password' field must be at least 6 characters long.")
+    if len(password) > 128:
+        raise HTTPException(status_code=400, detail="The 'password' field must not exceed 128 characters.")
+    if not re.search(r"[A-Z]", password):
+        raise HTTPException(status_code=400, detail="The 'password' must contain at least one uppercase letter.")
+    if not re.search(r"[a-z]", password):
+        raise HTTPException(status_code=400, detail="The 'password' must contain at least one lowercase letter.")
+    if not re.search(r"[0-9]", password):
+        raise HTTPException(status_code=400, detail="The 'password' must contain at least one digit.")
 
 def validate_register_fields(user_in: UserRegister):
     if not isinstance(user_in.email, str) or not user_in.email.strip():
-        raise HTTPException(status_code=422, detail="The 'email' field is required and must be a non-empty string.")
+        raise HTTPException(status_code=400, detail="The 'email' field is required and must be a non-empty string.")
     if not isinstance(user_in.username, str) or not user_in.username.strip():
-        raise HTTPException(status_code=422, detail="The 'username' field is required and must be a non-empty string.")
-    if not isinstance(user_in.password, str) or not user_in.password.strip():
-        raise HTTPException(status_code=422, detail="The 'password' field is required and must be a non-empty string.")
+        raise HTTPException(status_code=400, detail="The 'username' field is required and must be a non-empty string.")
     if len(user_in.username) > 50:
-        raise HTTPException(status_code=422, detail="The 'username' field must not exceed 50 characters.")
-    if len(user_in.password) < 6:
-        raise HTTPException(status_code=422, detail="The 'password' field must be at least 6 characters long.")
-    if len(user_in.password) > 128:
-        raise HTTPException(status_code=422, detail="The 'password' field must not exceed 128 characters.")
+        raise HTTPException(status_code=400, detail="The 'username' field must not exceed 50 characters.")
+    validate_password(user_in.password)
 
+def validate_login_fields(user_in: UserLogin):
+    if not isinstance(user_in.email, str) or not user_in.email.strip():
+        raise HTTPException(status_code=400, detail="The 'email' field is required and must be a non-empty string.")
+    validate_password(user_in.password)
+    
 @router.post(
     "/login",
     response_model=AuthResponse,
@@ -92,6 +104,10 @@ def register_user(
     """
     try:
         validate_register_fields(user_in)
+        existing_user = get_user_by_email(db, user_in.email)
+        if existing_user:
+            raise HTTPException(status_code=400, detail="The email is already registered.")
+
         db_user = User(
             email=user_in.email,
             username=user_in.username,
@@ -103,39 +119,65 @@ def register_user(
             raise HTTPException(status_code=400, detail="User could not be registered.")
 
         token_obj = create_action_token(db, result["user"].id, "verification", expires_minutes=30)
-################### Aquí deberías enviar el email con token_obj.token####################################
+        confirmation_link = f"https://tu-frontend.com/confirm-email?token={token_obj.token}"
+
+        email_body = load_template(
+            "welcome.html",
+            {
+                "username": result["user"].username,
+                "confirmation_link": confirmation_link
+            }
+        )
+        send_email(
+            to_email=result["user"].email,
+            subject="Confirm your email for Ghosts-API",
+            body=email_body
+        )
+
         return {
             "id": result["user"].id,
             "user_rol": result["user"].user_rol,
             "access_token": result["access_token"],
             "msg": "User registered successfully. Please verify your email."
         }
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     except HTTPException:
         raise
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 @router.post(
-    "/verify-token",
-    summary="Verify access token",
-    description="Verify the validity of a JWT access token.",
-    response_description="Decoded token data if valid."
+    "/request-email-verification",
+    summary="Request email verification",
+    description="Send an email verification request to the user.",
 )
-def verify_token(
-    Authorization: str = Header(..., description="JWT access token in the format: Bearer <token>")
+def request_email_verification(
+    data: TokenRequest,
+    db: Session = Depends(get_db)
 ):
-    """
-    Verify the validity of a JWT access token.
-    """
-    try:
-        token = Authorization.split(" ")[1] if " " in Authorization else Authorization
-        result = decode_access_token(token)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
-    
+    user = get_user_by_email(db, data.email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    if getattr(user, "is_verified", False):
+        raise HTTPException(status_code=400, detail="User is already verified.")
+    token_obj = create_action_token(db, user.id, "verification", expires_minutes=30)
+
+    confirmation_link = f"https://tu-frontend.com/confirm-email?token={token_obj.token}"
+    email_body = load_template(
+        "welcome.html",
+        {
+            "username": user.username,
+            "confirmation_link": confirmation_link
+        }
+    )
+    send_email(
+        to_email=user.email,
+        subject="Confirm your email for Ghosts-API",
+        body=email_body
+    )
+    return {"msg": "Verification email sent."}
+
 @router.post(
     "/request-password-reset",
     summary="Request password reset",
@@ -149,48 +191,26 @@ def request_password_reset(
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
     token_obj = create_action_token(db, user.id, "reset", expires_minutes=30)
-######################Aquí deberías enviar el email con el token_obj.token#############################
+
+    reset_link = f"https://tu-frontend.com/reset-password?token={token_obj.token}"
+    email_body = load_template(
+        "reset_password.html",
+        {
+            "username": user.username,
+            "reset_link": reset_link
+        }
+    )
+    send_email(
+        to_email=user.email,
+        subject="Reset your password for Ghosts-API",
+        body=email_body
+    )
     return {"msg": "Reset password email sent."}
 
 @router.post(
-    "/reset-password",
-    summary="Reset password",
-    description="Allow the user to reset their password using a token.",
-)
-def reset_password(
-    data: TokenVerify,
-    db: Session = Depends(get_db)
-):
-    user_token = get_valid_action_token(db, data.token, "reset")
-    if not user_token:
-        raise HTTPException(status_code=400, detail="Invalid or expired token.")
-    if not data.new_password or len(data.new_password) < 6:
-        raise HTTPException(status_code=422, detail="The 'new_password' field must be at least 6 characters long.")
-    mark_action_token_used(db, data.token)
-    hashed = hash_password(data.new_password)
-    update_user_by_id(db, user_token.user_id, {"hashed_password": hashed})
-    return {"msg": "Password reset successfully."}
-
-@router.post(
-    "/request-email-verification",
-    summary="Request email verification",
-    description="Send an email verification request to the user.",
-)
-def request_email_verification(
-    data: TokenRequest,
-    db: Session = Depends(get_db)
-):
-    user = get_user_by_email(db, data.email)
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
-    token_obj = create_action_token(db, user.id, "verification", expires_minutes=30)
-#################Aquí deberías enviar el email con token_obj.token############
-    return {"msg": "Email de verificación enviado."}
-
-@router.post(
     "/confirm-email",
-    summary="Confirmar email",
-    description="Confirma el email del usuario usando el token recibido.",
+    summary="Confirm email",
+    description="Confirm the user's email using the received token.",
 )
 def confirm_email(
     data: TokenVerify,
@@ -198,7 +218,46 @@ def confirm_email(
 ):
     user_token = get_valid_action_token(db, data.token, "verification")
     if not user_token:
-        raise HTTPException(status_code=400, detail="Token inválido, expirado o ya usado.")
+        raise HTTPException(status_code=400, detail="Invalid, expired or already used token.")
     mark_action_token_used(db, data.token)
     update_user_by_id(db, user_token.user_id, {"is_verified": True})
     return {"msg": "Email confirmado exitosamente."}
+
+@router.post(
+    "/reset-password",
+    summary="Reset password",
+    description="Allow the user to reset their password using a token.",
+)
+def reset_password(
+    data: TokenReset,
+    db: Session = Depends(get_db)
+):
+    user_token = get_valid_action_token(db, data.token, "reset")
+    if not user_token:
+        raise HTTPException(status_code=400, detail="Invalid or expired token.")
+    validate_password(data.new_password)
+    user = get_user_by_id(db, user_token.user_id)
+    if user and verify_password(data.new_password, user.hashed_password):
+        raise HTTPException(status_code=422, detail="The new password must be different from the previous one.")
+    mark_action_token_used(db, data.token)
+    hashed = hash_password(data.new_password)
+    update_user_by_id(db, user_token.user_id, {"hashed_password": hashed})
+    return {"msg": "Password reset successfully."}
+
+@router.post(
+    "/verify-token",
+    summary="Verify access token",
+    description="Verify the validity of a JWT access token.",
+    response_description="Decoded token data if valid."
+)
+def verify_token(
+    data: TokenVerify
+):
+    """
+    Verify the validity of a JWT access token.
+    """
+    try:
+        result = decode_access_token(data.token)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")

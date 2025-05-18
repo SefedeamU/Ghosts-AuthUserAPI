@@ -1,19 +1,4 @@
 services:
-  auth-api:
-    build: .
-    container_name: ghosts-auth-api
-    restart: always
-    env_file:
-      - .env
-    depends_on:
-      - db
-    ports:
-      - "8000:8000"
-    networks:
-      - ghosts-network
-    volumes:
-      - ./alembic/versions:/app/alembic/versions
-
   db:
     image: postgres:15-alpine
     container_name: ghosts-auth-db
@@ -29,7 +14,28 @@ services:
     networks:
       - ghosts-network
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-api:
+    build: .
+    container_name: ghosts-auth-api
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    networks:
+      - ghosts-network
+    volumes:
+      - ./alembic/versions:/app/alembic/versions
 
 networks:
   ghosts-network:
@@ -37,4 +43,4 @@ networks:
     external: true
 
 volumes:
-  postgres_data:
+  users_data:

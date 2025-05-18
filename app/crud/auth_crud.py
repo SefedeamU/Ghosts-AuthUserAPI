@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from jose import ExpiredSignatureError, JWTError, jwt
 from sqlalchemy.orm import Session
-from app.core.config import Settings
+
+from app.core.config import settings
 from app.models.auth_model import UserToken
 from app.models.user_model import User
 from app.schemas.auth_schema import UserLogin
@@ -11,7 +12,7 @@ def login(db: Session, user_in: UserLogin):
     try:
         db_user = db.query(User).filter(User.email == user_in.email).first()
         if db_user and verify_password(user_in.password, db_user.hashed_password):
-            token = create_access_token({"sub": db_user.id}, db_user.user_rol)
+            token = create_access_token({"sub": str(db_user.id)}, db_user.user_rol)
             return {"user": db_user, "access_token": token}
         return None
     except Exception:
@@ -23,7 +24,7 @@ def register(db: Session, db_user):
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-        token = create_access_token({"sub": db_user.id}, db_user.user_rol)
+        token = create_access_token({"sub": str(db_user.id)}, db_user.user_rol)
         return {"user": db_user, "access_token": token}
     except Exception:
         db.rollback()
@@ -32,7 +33,7 @@ def register(db: Session, db_user):
 def create_action_token(db: Session, user_id: int, type_: str, expires_minutes: int = 30):
     expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "type": type_,
         "exp": expire
     }
@@ -59,7 +60,7 @@ def get_valid_action_token(db: Session, token: str, type_: str):
     if not user_token:
         return None
     try:
-        payload = jwt.decode(token, Settings.SECRET_KEY, algorithms=[Settings.JWT_ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         if payload.get("type") != type_:
             return None
         return user_token

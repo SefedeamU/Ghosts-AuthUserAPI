@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_HOURS: int = 72
     ALLOWED_COUNTRIES: str
     MAX_ADDRESSES_PER_USER: int
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+    EMAIL_FROM: str
 
     @property
     def db_url(self):
@@ -28,5 +33,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        extra = "forbid"
+        case_sensitive = True
 
 settings = Settings()
