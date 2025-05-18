@@ -71,7 +71,7 @@ deactivate
 ### 1. Requisitos previos
 
 - Tener Docker y Docker Compose.
-- Tener el archivo `.env` configurado correctamente en la raíz del microservicio (Estas serán las credenciales con las que los contenedores de bases de datos de prueba se configuren).
+- Tener el archivo `.env` configurado correctamente en la raíz del microservicio (Estas serán las credenciales con las que los contenedores de bases de datos se configuren).
 
 ### 2. Levantar la API y la base de datos
 
