@@ -1,6 +1,22 @@
 # Guía de despliegue y pruebas para Auth Microservice
 
-## 🐍 Entorno virtual Python (opcional para desarrollo local)
+## 📖 ¿Qué es este proyecto?
+
+**Auth Microservice** es un microservicio de autenticación y gestión de usuarios desarrollado en Python con FastAPI. Forma parte de una arquitectura de microservicios y se encarga de todas las operaciones relacionadas con la autenticación y la seguridad de los usuarios.
+
+### Funcionalidades principales
+
+- **Registro de usuarios:** Permite crear nuevas cuentas de usuario con validación de datos.
+- **Inicio de sesión:** Autenticación mediante email y contraseña, con generación de tokens JWT.
+- **Verificación de email:** Envío de correos de verificación y endpoints para confirmar la cuenta.
+- **Recuperación y cambio de contraseña:** Solicitud y confirmación de restablecimiento de contraseña mediante tokens seguros.
+- **Gestión de sesiones:** Validación y verificación de tokens JWT para proteger rutas privadas.
+- **Deshacer cambio de contraseña:** Permite revertir un cambio de contraseña reciente si fue realizado por error o sin autorización.
+- **Endpoints seguros y documentación automática:** Todos los endpoints están documentados y protegidos según las mejores prácticas de seguridad.
+
+---
+
+## 🐍 Entorno virtual Python (opcional)
 
 Si deseas trabajar o probar el microservicio localmente (sin Docker), puedes crear y activar un entorno virtual de Python:
 
