@@ -16,8 +16,6 @@ Durante el desarrollo, puse especial atención en:
 - El manejo profesional de errores y validaciones.
 - La gestión avanzada de usuarios y direcciones, pensando en escenarios reales de e-commerce.
 
-Este proyecto es, ante todo, un espacio para experimentar, aprender y disfrutar del proceso de construir software de calidad. ¡Y esto recién empieza! El próximo microservicio será en Spring Boot… ¡prepárate Java, allá voy!
-
 ### Funcionalidades principales
 
 - **Registro de usuarios:** Permite crear nuevas cuentas de usuario con validación de datos.
