@@ -311,8 +311,11 @@ def verify_token(
     """
     Verify the validity of a JWT access token.
     """
-    try:
-        result = decode_access_token(data.token)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+    result = decode_access_token(data.token)
+    if not result.get("valid"):
+        # Mensaje específico según el error
+        if result.get("error") == "Token expired":
+            raise HTTPException(status_code=401, detail="Token expired")
+        else:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    return result

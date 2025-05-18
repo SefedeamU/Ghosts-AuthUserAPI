@@ -47,6 +47,8 @@ def get_valid_action_token(db: Session, token: str, type_: str):
         return user_token
     except (ExpiredSignatureError, JWTError):
         return None
+    except Exception:
+        return None
 
 def mark_action_token_used(db: Session, token: str):
     user_token = db.query(ActionToken).filter(ActionToken.token == token).first()

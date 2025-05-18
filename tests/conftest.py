@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
+from app.core.security import hash_password
 from app.main import app
 from app.db.session import engine
 from app.models.address_model import Base as AddressBase
@@ -24,6 +25,8 @@ def clean_tables():
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
     db.execute(text("DELETE FROM addresses"))
+    db.execute(text("DELETE FROM action_tokens"))
+    db.execute(text("DELETE FROM password_restore_tokens"))
     db.execute(text("DELETE FROM users"))
     db.commit()
     db.close()
@@ -38,7 +41,15 @@ def db_session():
 
 @pytest.fixture(scope="function")
 def test_user(db_session):
-    user = User(id=1, username="testuser", email="test@example.com", hashed_password="1234")
+    user = User(
+        id=1,
+        firstname="Test",
+        lastname="User",
+        email="test@example.com",
+        hashed_password=hash_password("Password1"),
+        user_rol="user",
+        phone="+1234567890"
+    )
     db_session.add(user)
     db_session.commit()
     yield user
