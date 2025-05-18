@@ -1,6 +1,17 @@
 ## 📖 ¿Qué es este proyecto?
 
 **Auth Microservice** es un microservicio de autenticación y gestión de usuarios orientado a aplicaciones de e-commerce desarrollado en Python con FastAPI. Forma parte de una arquitectura de microservicios y se encarga de todas las operaciones relacionadas con la autenticación, la seguridad de los usuarios y la gestión de direcciones asociadas a cada usuario.
+## 🚀 Resumen para reclutadores
+
+Este microservicio demuestra mi dominio en:
+- Arquitectura de microservicios y separación de responsabilidades.
+- Seguridad backend: JWT, hash de contraseñas, validación de sesiones.
+- Pruebas automáticas con Pytest y entornos aislados con Docker Compose.
+- Documentación y buenas prácticas de API REST.
+- Manejo de errores y validaciones robustas.
+- Despliegue y automatización con Docker.
+
+Incluye gestión avanzada de usuarios y direcciones, flujos de recuperación y verificación de cuenta, y está listo para producción.
 
 ### Funcionalidades principales
 
