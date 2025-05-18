@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.address_model import Address
 from app.api.deps import get_db
-from app.schemas.address_schema import AddressCreate, AddressOut
+from app.schemas.address_schema import AddressCreate, AddressOut, AddressReplace, AddressUpdate
 from app.crud.address_crud import (
     create_address, delete_address, get_address_by_id,
     get_addresses_by_user_id, update_address_by_id, address_exists_for_user, count_addresses_for_user
@@ -143,7 +143,7 @@ def get_addresses_by_user(
 )
 def update_address(
     address_id: int,
-    address: AddressCreate = Body(
+    address: AddressReplace = Body(
         ...,
         examples={
             "user_id": 1,
@@ -166,6 +166,39 @@ def update_address(
 
     try:
         updated_address = update_address_by_id(db, address_id, address.model_dump())
+        if not updated_address:
+            raise HTTPException(status_code=404, detail="Address not found.")
+        return updated_address
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    except TypeError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid data sent: {str(e)}")
+
+@router.patch(
+    "/{address_id}",
+    response_model=AddressOut,
+    summary="Partially update address",
+    description="Update one or more fields of an address by its ID.",
+    response_description="The updated address object."
+)
+def partial_update_address(
+    address_id: int,
+    address: AddressUpdate = Body(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Partially update an address by its ID.
+    Only the provided fields will be updated.
+    """
+    if not isinstance(address_id, int) or address_id <= 0:
+        raise HTTPException(status_code=422, detail="The 'address_id' parameter must be a positive integer.")
+
+    address_dict = address.model_dump(exclude_unset=True)
+    if not address_dict:
+        raise HTTPException(status_code=422, detail="No data provided for update.")
+
+    try:
+        updated_address = update_address_by_id(db, address_id, address_dict)
         if not updated_address:
             raise HTTPException(status_code=404, detail="Address not found.")
         return updated_address

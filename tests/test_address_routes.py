@@ -38,21 +38,37 @@ def test_list_addresses_by_user(client, address_data, test_user):
     assert isinstance(data, list)
     assert len(data) >= 2
 
-def test_update_address(client, address_data, test_user):
+def test_replace_address(client, address_data, test_user):
     create_resp = client.post("/addresses/", json=address_data)
     address_id = create_resp.json()["id"]
-    update_data = {
-        "street": "Updated St",
-        "city": "City",
-        "state": "ST",
-        "zip_code": "12345",
-        "country": "USA",
-        "user_id": 1
+
+    replace_data = {
+        "user_id": test_user.id,
+        "street": "Replaced St",
+        "city": "New City",
+        "state": "NC",
+        "zip_code": "54321",
+        "country": "USA"
     }
-    response = client.put(f"/addresses/{address_id}", json=update_data)
+    response = client.put(f"/addresses/{address_id}", json=replace_data)
     assert response.status_code == 200
     data = response.json()
-    assert data["street"] == "Updated St"
+    assert data["street"] == "Replaced St"
+    assert data["city"] == "New City"
+    assert data["zip_code"] == "54321"
+
+def test_partial_update_address(client, address_data, test_user):
+    create_resp = client.post("/addresses/", json=address_data)
+    address_id = create_resp.json()["id"]
+
+    patch_data = {
+        "street": "Patched St"
+    }
+    response = client.patch(f"/addresses/{address_id}", json=patch_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["street"] == "Patched St"
+    assert data["city"] == address_data["city"]
 
 def test_delete_address(client, address_data, test_user):
     create_resp = client.post("/addresses/", json=address_data)

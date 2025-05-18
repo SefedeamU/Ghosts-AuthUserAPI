@@ -33,12 +33,56 @@ def test_get_addresses_by_user_id(db_session, test_user):
     addresses = get_addresses_by_user_id(db_session, test_user.id)
     assert len(addresses) == 2
 
-def test_update_address_by_id(db_session, test_user):
-    address = Address(user_id=test_user.id, street="Old", city="City", state="ST", zip_code="000", country="Country")
+def test_replace_address_crud(db_session, test_user):
+    address = Address(
+        user_id=test_user.id,
+        street="Original St",
+        city="Original City",
+        state="OS",
+        zip_code="00000",
+        country="Original"
+    )
     created = create_address(db_session, address)
-    update_address_by_id(db_session, created.id, {"street": "New"})
-    updated = get_address_by_id(db_session, created.id)
-    assert updated.street == "New"
+    address_id = created.id
+
+    replace_data = {
+        "user_id": test_user.id,
+        "street": "Replaced St",
+        "city": "New City",
+        "state": "NC",
+        "zip_code": "54321",
+        "country": "USA"
+    }
+    updated = update_address_by_id(db_session, address_id, replace_data)
+    assert updated is not None
+    assert updated.street == "Replaced St"
+    assert updated.city == "New City"
+    assert updated.zip_code == "54321"
+    assert updated.country == "USA"
+
+def test_partial_update_address_crud(db_session, test_user):
+    address = Address(
+        user_id=test_user.id,
+        street="Partial St",
+        city="Partial City",
+        state="PC",
+        zip_code="11111",
+        country="Partial"
+    )
+    created = create_address(db_session, address)
+    address_id = created.id
+
+    patch_data = {
+        "street": "Patched St"
+    }
+    updated = update_address_by_id(db_session, address_id, patch_data)
+    assert updated is not None
+    assert updated.street == "Patched St"
+    # Los demás campos no cambian
+    assert updated.city == "Partial City"
+    assert updated.state == "PC"
+    assert updated.zip_code == "11111"
+    assert updated.country == "Partial"
 
 def test_delete_address(db_session, test_user):
     address = Address(user_id=test_user.id, street="Del", city="City", state="ST", zip_code="999", country="Country")

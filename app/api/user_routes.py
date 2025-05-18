@@ -5,7 +5,7 @@ from pydantic import EmailStr, ValidationError
 
 from app.api.deps import get_db
 from app.crud.user_crud import delete_user, get_user_by_email, get_user_by_id, get_users, update_user_by_id
-from app.schemas.user_schema import UserOut
+from app.schemas.user_schema import UserOut, UserReplace, UserUpdate
 
 router = APIRouter()
 
@@ -99,25 +99,58 @@ def get_user_by_email_route(email: str, db: Session = Depends(get_db)):
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-@router.put(
+@router.patch(
     "/{user_id}",
     response_model=UserOut,
-    summary="Update user",
-    description="Update user information by user ID.",
+    summary="Partially update user",
+    description="Update one or more fields of a user by user ID.",
     response_description="The updated user object."
 )
-def update_user(
+def partial_update_user(
     user_id: int,
-    user_data: dict = Body(..., examples={"email": "new@mail.com", "username": "newuser"}),
+    user_data: UserUpdate = Body(...),
     db: Session = Depends(get_db)
 ):
     """
-    Update user information by user ID.
+    Partially update user information by user ID.
+    Only the provided fields will be updated.
     """
     validate_user_id(user_id)
-    validate_update_data(user_data, db, user_id)
+    user_dict = user_data.model_dump(exclude_unset=True)
+    if not user_dict:
+        raise HTTPException(status_code=422, detail="No data provided for update.")
+    validate_update_data(user_dict, db, user_id)
     try:
-        user = update_user_by_id(db, user_id, user_data)
+        user = update_user_by_id(db, user_id, user_dict)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+        return user
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    except TypeError as e:
+        raise HTTPException(status_code=422, detail=f"Invalid data sent: {str(e)}")
+
+@router.put(
+    "/{user_id}",
+    response_model=UserOut,
+    summary="Replace user",
+    description="Replace all user data by user ID. All fields must be provided.",
+    response_description="The updated user object."
+)
+def replace_user(
+    user_id: int,
+    user_data: UserReplace = Body(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Replace all user information by user ID.
+    All fields must be provided.
+    """
+    validate_user_id(user_id)
+    user_dict = user_data.model_dump()
+    validate_update_data(user_dict, db, user_id)
+    try:
+        user = update_user_by_id(db, user_id, user_dict)
         if not user:
             raise HTTPException(status_code=404, detail="User not found.")
         return user

@@ -23,5 +23,6 @@ class User(Base):
     birthdate = Column(String, nullable=True)
     gender = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)
+    stripe_customer_id = Column(String, nullable=True, unique=True)
 
     addresses = relationship("Address", back_populates="user")

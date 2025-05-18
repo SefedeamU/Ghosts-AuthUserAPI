@@ -18,10 +18,12 @@ services:
     image: postgres:15-alpine
     container_name: ghosts-auth-db
     restart: always
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: usuario
-      POSTGRES_PASSWORD: contraseña
-      POSTGRES_DB: nombre_basedatos
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     ports:
       - "5432:5432"
     networks:
