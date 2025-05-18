@@ -6,7 +6,7 @@
 
 Este proyecto es el primer paso de un reto personal mucho más grande: construir, por puro gusto y aprendizaje, una aplicación de e-commerce basada en microservicios. Hace unos días me propuse llevar a la práctica todo lo que he aprendido en desarrollo backend, y decidí comenzar por el microservicio de autenticación y usuarios.
 
-Mi meta es crear una solución completa, compuesta por cuatro microservicios independientes, cada uno desarrollado con tecnologías modernas y buenas prácticas de la industria. Hoy puedo decir con orgullo (¡y diversión!) que he terminado la primera versión estable de este microservicio, usando Python y FastAPI como aliados principales.
+Mi meta es crear una solución completa, compuesta por cuatro microservicios independientes, cada uno desarrollado con tecnologías modernas y buenas prácticas de la industria. Hoy puedo decir con felicidad que he terminado la primera versión estable de este microservicio, usando Python y FastAPI como aliados principales.
 
 Durante el desarrollo, puse especial atención en:
 - La arquitectura modular y la separación de responsabilidades.
