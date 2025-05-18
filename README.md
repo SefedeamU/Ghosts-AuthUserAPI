@@ -1,17 +1,22 @@
 ## 📖 ¿Qué es este proyecto?
 
 **Auth Microservice** es un microservicio de autenticación y gestión de usuarios orientado a aplicaciones de e-commerce desarrollado en Python con FastAPI. Forma parte de una arquitectura de microservicios y se encarga de todas las operaciones relacionadas con la autenticación, la seguridad de los usuarios y la gestión de direcciones asociadas a cada usuario.
-## 🚀 Resumen para reclutadores
 
-Este microservicio demuestra mi dominio en:
-- Arquitectura de microservicios y separación de responsabilidades.
-- Seguridad backend: JWT, hash de contraseñas, validación de sesiones.
-- Pruebas automáticas con Pytest y entornos aislados con Docker Compose.
-- Documentación y buenas prácticas de API REST.
-- Manejo de errores y validaciones robustas.
-- Despliegue y automatización con Docker.
+## 🎯 Objetivo y motivación del proyecto
 
-Incluye gestión avanzada de usuarios y direcciones, flujos de recuperación y verificación de cuenta, y está listo para producción.
+Este proyecto es el primer paso de un reto personal mucho más grande: construir, por puro gusto y aprendizaje, una aplicación de e-commerce basada en microservicios. Hace unos días me propuse llevar a la práctica todo lo que he aprendido en desarrollo backend, y decidí comenzar por el microservicio de autenticación y usuarios.
+
+Mi meta es crear una solución completa, compuesta por cuatro microservicios independientes, cada uno desarrollado con tecnologías modernas y buenas prácticas de la industria. Hoy puedo decir con orgullo (¡y diversión!) que he terminado la primera versión estable de este microservicio, usando Python y FastAPI como aliados principales.
+
+Durante el desarrollo, puse especial atención en:
+- La arquitectura modular y la separación de responsabilidades.
+- La seguridad: JWT, hash de contraseñas y validación robusta de sesiones.
+- La automatización de pruebas con Pytest y entornos aislados usando Docker Compose.
+- La documentación clara y automática de la API.
+- El manejo profesional de errores y validaciones.
+- La gestión avanzada de usuarios y direcciones, pensando en escenarios reales de e-commerce.
+
+Este proyecto es, ante todo, un espacio para experimentar, aprender y disfrutar del proceso de construir software de calidad. ¡Y esto recién empieza! El próximo microservicio será en Spring Boot… ¡prepárate Java, allá voy!
 
 ### Funcionalidades principales
 
