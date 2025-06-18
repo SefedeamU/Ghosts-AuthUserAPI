@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 import re
-import token
+
+from fastapi import BackgroundTasks
+
 from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
@@ -100,6 +102,8 @@ def login_user(
     response_description="Authentication response with user info and access token."
 )
 def register_user(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
     user_in: UserRegister = Body(
         ...,
         examples={
@@ -109,8 +113,7 @@ def register_user(
             "phone": "+1234567890",
             "password": "securepassword"
         }
-    ),
-    db: Session = Depends(get_db)
+    )
 ):
     """
     Register a new user and return an access token.
@@ -133,22 +136,22 @@ def register_user(
         if not result or not result.get("user"):
             raise HTTPException(status_code=400, detail="User could not be registered.")
 
-        token_obj = create_action_token(db, result["user"].id, "verification", expires_minutes=30)
-        confirmation_link = f"https://tu-frontend.com/confirm-email?token={token_obj.token}"
-
-        email_body = load_template(
-            "welcome.html",
-            {
-                "username": f"{result["user"].firstname} {result["user"].lastname}",
-                "confirmation_link": confirmation_link
-            }
-        )
-        send_email(
-            to_email=result["user"].email,
-            subject="Confirm your email for Ghosts-API",
-            body=email_body
-        )
-
+        def send_verification_email():
+            token_obj = create_action_token(db, result["user"].id, "verification", expires_minutes=30)
+            confirmation_link = f"https://tu-frontend.com/confirm-email?token={token_obj.token}"
+            email_body = load_template(
+                "welcome.html",
+                {
+                    "username": f"{result['user'].firstname} {result['user'].lastname}",
+                    "confirmation_link": confirmation_link
+                }
+            )
+            send_email(
+                to_email=result["user"].email,
+                subject="Confirm your email for Ghosts-API",
+                body=email_body
+            )
+        background_tasks.add_task(send_verification_email)
         return {
             "id": result["user"].id,
             "user_rol": result["user"].user_rol,

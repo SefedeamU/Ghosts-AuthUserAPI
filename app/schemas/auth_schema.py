@@ -2,13 +2,13 @@ from pydantic import BaseModel, EmailStr, Field
 
 class UserLogin(BaseModel, extra="forbid"):
     email: EmailStr = Field(..., examples=["user@example.com"], description="User's email address.")
-    password: str = Field(..., min_length=6, examples=["yourpassword"], description="User's password (6-128 characters).")
+    password: str = Field(..., examples=["yourpassword"], description="User's password (6-128 characters).")
 
 class UserRegister(BaseModel, extra="forbid"):
     email: EmailStr = Field(..., examples=["newuser@example.com"], description="User's email address.")
     firstname: str = Field(..., examples=["john"], description="User's first name.")
     lastname: str = Field(..., examples=["doe"], description="User's last name.")
-    password: str = Field(..., min_length=6, examples=["securepassword"], description="User's password (6-128 characters).")
+    password: str = Field(..., examples=["securepassword"], description="User's password (6-128 characters).")
     phone: str = Field(..., examples=["+1234567890"], description="User's phone number.")
 
 class AuthResponse(BaseModel):

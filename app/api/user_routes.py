@@ -187,5 +187,3 @@ def remove_user(user_id: int, db: Session = Depends(get_db)):
         return user
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    
-    
