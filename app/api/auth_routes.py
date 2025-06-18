@@ -300,7 +300,7 @@ def undo_password_change(
     update_user_by_id(db, restore_token.user_id, {"hashed_password": restore_token.old_hashed_password})
     restore_token.used = True
     db.commit()
-    return {"msg": "Your password has been restored. If no fuiste tú, cambia tu contraseña inmediatamente."}
+    return {"msg": "Your password has been restored. If you did not request this change, please contact support."}
 
 @router.post(
     "/verify-token",
