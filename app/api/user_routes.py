@@ -1,13 +1,15 @@
 import re
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, Response
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from pydantic import EmailStr, ValidationError
 
-from app.api.auth_routes import validate_password
 from app.api.deps import get_db
 from app.crud.user_crud import delete_user, get_user_by_email, get_user_by_id, get_users, update_user_by_id
 from app.schemas.user_schema import UserOut, UserReplace, UserUpdate
+
+from fastapi import status
+
 
 router = APIRouter()
 
@@ -171,7 +173,7 @@ def replace_user(
 
 @router.delete(
     "/{user_id}",
-    response_model=UserOut,
+    status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete user",
     description="Delete a user by their unique user ID."
 )
@@ -184,6 +186,6 @@ def remove_user(user_id: int, db: Session = Depends(get_db)):
         user = delete_user(db, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found.")
-        return user
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
