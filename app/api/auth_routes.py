@@ -37,6 +37,8 @@ def validate_password(password: str):
 def validate_register_fields(user_in: UserRegister):
     if not isinstance(user_in.email, str) or not user_in.email.strip():
         raise HTTPException(status_code=400, detail="The 'email' field is required and must be a non-empty string.")
+    if not isinstance(user_in.nickname, str) or not user_in.nickname.strip():
+        raise HTTPException(status_code=400, detail="The 'nickname' field is required and must be a non-empty string.")
     if not isinstance(user_in.firstname, str) or not user_in.firstname.strip():
         raise HTTPException(status_code=400, detail="The 'firstname' field is required and must be a non-empty string.")
     if len(user_in.firstname) > 50:
@@ -108,6 +110,7 @@ def register_user(
         ...,
         examples={
             "email": "newuser@example.com",
+            "nickname": "ghosty",
             "firstname": "John",
             "lastname": "Doe",
             "phone": "+1234567890",
@@ -126,6 +129,7 @@ def register_user(
 
         db_user = User(
             email=user_in.email,
+            nickname=user_in.nickname,
             firstname=user_in.firstname,
             lastname=user_in.lastname,
             phone=user_in.phone,

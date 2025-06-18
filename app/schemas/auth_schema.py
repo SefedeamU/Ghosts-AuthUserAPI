@@ -6,10 +6,11 @@ class UserLogin(BaseModel, extra="forbid"):
 
 class UserRegister(BaseModel, extra="forbid"):
     email: EmailStr = Field(..., examples=["newuser@example.com"], description="User's email address.")
+    nickname: str = Field(None, examples=["ghosty"], description="User's nickname.")
     firstname: str = Field(..., examples=["john"], description="User's first name.")
     lastname: str = Field(..., examples=["doe"], description="User's last name.")
-    password: str = Field(..., examples=["securepassword"], description="User's password (6-128 characters).")
     phone: str = Field(..., examples=["+1234567890"], description="User's phone number.")
+    password: str = Field(..., examples=["securepassword"], description="User's password (6-128 characters).")
 
 class AuthResponse(BaseModel):
     id: int = Field(..., examples=[1], description="User ID.")

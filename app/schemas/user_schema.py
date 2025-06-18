@@ -4,6 +4,7 @@ from datetime import datetime
 from app.schemas.address_schema import AddressOut
 
 class UserUpdate(BaseModel, extra="forbid"):
+    nickname: Optional[str] = Field(None, examples=["ghosty"], description="User's nickname.")
     firstname: Optional[str] = Field(None, examples=["john"], description="User's first name.")
     lastname: Optional[str] = Field(None, examples=["doe"], description="User's last name.")
     phone: Optional[str] = Field(None, examples=["+1234567890"], description="User's phone number.")
@@ -15,6 +16,7 @@ class UserUpdate(BaseModel, extra="forbid"):
 class UserReplace(BaseModel, extra="forbid"):
     firstname: str = Field(..., examples=["john_doe"], description="User's display name.")
     lastname: str = Field(..., examples=["john_doe"], description="User's display name.")
+    nickname: Optional[str] = Field(None, examples=["ghosty"], description="User's nickname.")
     phone: Optional[str] = Field(None, examples=["+1234567890"], description="User's phone number.")
     address: Optional[str] = Field(None, examples=["123 Main St"], description="User's main address.")
     birthdate: Optional[str] = Field(None, examples=["1990-01-01"], description="User's birthdate (YYYY-MM-DD).")
@@ -25,6 +27,7 @@ class UserOut(BaseModel):
     id: int = Field(..., examples=[1], description="Unique user ID.")
     email: EmailStr = Field(..., examples=["user@example.com"], description="User's email address.")
     firstname: str = Field(..., examples=["john_doe"], description="User's display name.")
+    nickname: Optional[str] = Field(None, examples=["ghosty"], description="User's nickname.")
     lastname: str = Field(..., examples=["john_doe"], description="User's display name.")
     phone: Optional[str] = Field(None, examples=["+1234567890"], description="User's phone number.")
     address: Optional[str] = Field(None, examples=["123 Main St"], description="User's main address.")

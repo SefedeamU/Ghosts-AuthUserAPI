@@ -12,6 +12,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    nickname = Column(String, nullable=True, unique=False)
     firstname = Column(String, nullable=False)
     lastname = Column(String, nullable=False)
     phone = Column(String, nullable=True)
