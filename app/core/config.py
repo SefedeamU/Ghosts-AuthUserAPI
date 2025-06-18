@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     DATABASE_NAME: str = ""
     SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_HOURS: int = 72
+    ACCESS_TOKEN_EXPIRE_HOURS: int = 672
     ALLOWED_COUNTRIES: str
     MAX_ADDRESSES_PER_USER: int
     SMTP_HOST: str
