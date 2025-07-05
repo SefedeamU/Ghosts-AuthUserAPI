@@ -5,21 +5,6 @@ from app.crud import auth_crud
 from app.models.user_model import User
 from app.models.auth_model import ActionToken, PasswordRestoreToken
 
-@pytest.fixture(scope="function")
-def test_user(db_session):
-    user = User(
-        id=1,
-        firstname="Test",
-        lastname="User",
-        email="test@example.com",
-        hashed_password=hash_password("Password1"),
-        user_rol="user",
-        phone="+1234567890"
-    )
-    db_session.add(user)
-    db_session.commit()
-    yield user
-
 def test_login_success(db_session, test_user, mocker):
     mocker.patch("app.core.security.verify_password", return_value=True)
     from app.schemas.auth_schema import UserLogin
@@ -46,12 +31,14 @@ def test_register_success(db_session):
         firstname="New",
         lastname="User",
         email="newuser@example.com",
+        nickname="newuser123",
         hashed_password="Password2",
         user_rol="user",
         phone="+1234567891"
     )
     result = auth_crud.register(db_session, user)
     assert result["user"].email == "newuser@example.com"
+    assert result["user"].nickname == "newuser123"
     assert "access_token" in result
 
 def test_get_valid_action_token_found(db_session, test_user, mocker):
@@ -124,6 +111,7 @@ def test_register_rollback_on_error(db_session, mocker):
         firstname="Fail",
         lastname="User",
         email="fail@example.com",
+        nickname="failuser",
         hashed_password="Password3",
         user_rol="user",
         phone="+1234567892"

@@ -23,7 +23,6 @@ def test_create_and_get_address(db_session, test_user):
     fetched = get_address_by_id(db_session, created.id)
     assert fetched is not None
     assert fetched.street == "Main St"
-    assert fetched.street == "Main St"
 
 def test_get_addresses_by_user_id(db_session, test_user):
     address1 = Address(user_id=test_user.id, street="A", city="B", state="C", zip_code="111", country="X")

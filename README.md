@@ -35,6 +35,41 @@ Durante el desarrollo, puse especial atención en:
 
 ---
 
+## ⚠️ Configuración obligatoria del archivo .env
+
+**IMPORTANTE:** Antes de ejecutar el microservicio, debes configurar obligatoriamente las siguientes variables en tu archivo `.env`:
+
+### 📧 Configuración SMTP (Requerida)
+
+Para que las funcionalidades de verificación de email y recuperación de contraseña funcionen correctamente, debes configurar los siguientes datos de SMTP en el archivo `.env`:
+
+```properties
+# Google SMTP settings (OBLIGATORIO)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu_email@gmail.com
+SMTP_PASSWORD=tu_contraseña_de_aplicación
+EMAIL_FROM=tu_email@gmail.com
+```
+
+**⚡ Nota importante:** Si usas Gmail, necesitarás generar una "contraseña de aplicación" en lugar de usar tu contraseña normal. Puedes hacerlo desde la configuración de seguridad de tu cuenta de Google.
+
+### 🔐 Otras configuraciones importantes
+
+También asegúrate de cambiar estos valores por defecto en el `.env`:
+
+```properties
+#Database conection settings
+DATABASE_USER=tu_usuario_db
+DATABASE_PASSWORD=tu_contraseña_db
+DATABASE_NAME=tu_nombre_db
+
+#Encryption settings
+SECRET_KEY=tu_clave_secreta_super_segura
+```
+
+---
+
 ## 🐍 Entorno virtual Python (opcional)
 
 Si deseas trabajar o probar el microservicio localmente (sin Docker), puedes crear y activar un entorno virtual de Python:

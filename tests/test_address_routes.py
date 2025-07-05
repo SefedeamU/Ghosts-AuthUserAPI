@@ -19,6 +19,7 @@ def test_create_address(client, address_data, test_user):
     assert "id" in data
     address_data["id"] = data["id"]
 
+
 def test_get_address(client, address_data, test_user):
     create_resp = client.post("/addresses/", json=address_data)
     address_id = create_resp.json()["id"]
